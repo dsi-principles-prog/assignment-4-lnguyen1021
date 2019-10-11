@@ -1,0 +1,117 @@
+---
+title: "20-eda"
+output: html_notebook
+---
+
+let us take a look at our data before we start engineering features
+
+exploring broad overview of data structure and dimensions
+```{r}
+dim(cl_appstore_games)
+str(cl_appstore_games)
+```
+
+let us look at the distributon of app prices
+```{r}
+cl_appstore_games %>% 
+  ggplot(aes(factor(average_user_rating),price))+
+  geom_violin()
+```
+
+interesting, we can see that the NA has a really long tail. as well as apps rated 4, 4.5
+since the NAs are meaningful but arent of interest for our question we will need to remove these when doing any calculations!
+
+let us see how the violin plots look when we filter out NA values since we are using average_user_rating as our predictor, it makes sense to remove NA values
+
+```{r}
+cl_appstore_games %>% 
+  filter(!is.na(average_user_rating)) %>% 
+  ggplot(aes(factor(average_user_rating),price))+
+  geom_violin()
+```
+
+hmm we still have really long tails. let us look a simple box plot to get an idea of the outliers
+
+
+maybe look at using ggplotly(brushing)
+```{r}
+cl_appstore_games %>% 
+  filter(!is.na(average_user_rating)) %>% 
+  group_by(average_user_rating) %>%  
+  ggplot(aes(factor(average_user_rating), price))+
+  geom_boxplot()
+```
+
+hmmm we havent learned much about how to specifically deal with a large number of outliers yet. I am going to leave these in our dataset for now.
+
+let us look at the average game rating by developer
+
+```{r}
+cl_appstore_games %>% 
+  group_by(developer) %>% 
+  summarise(avg_rating = mean(average_user_rating, na.rm=T)) %>% 
+  select(avg_rating, everything()) %>% 
+  arrange(desc(avg_rating))
+```
+
+interesting, there are over 8,681 developers in this dataset.
+
+let us look at the relationship between number of games a developer makes and the average rating
+
+```{r}
+cl_appstore_games %>% 
+  filter(!is.na(average_user_rating)) %>% 
+  group_by(developer) %>% 
+  mutate(num_games_dev = n(), avg_rating_dept = mean(average_user_rating, na.rm=T)) %>% 
+  ungroup() %>% 
+  arrange(desc(num_games_dev)) %>% 
+  select(num_games_dev,developer, average_user_rating,avg_rating_dept,everything()) %>% 
+  ggplot(aes(x=avg_rating_dept,y=num_games_dev))+
+  geom_point()
+
+
+```
+
+```{r}
+cl_appstore_games %>% 
+  group_by(developer) %>% 
+  filter(!is.na(average_user_rating)) %>% 
+  mutate(numgames=n()) %>% 
+  ungroup() %>% 
+  filter(numgames>0) %>% 
+  select(numgames,average_user_rating,user_rating_count,everything()) %>% 
+  arrange(desc(average_user_rating, user_rating_count)) %>% 
+  ggplot(aes(numgames))+
+  geom_histogram(bins =50)
+```
+
+
+engineer 3 = count the number of games by developer
+
+
+add a column that will count the number groups in a column
+```{r}
+
+num_in_groups<- function(df, ..., by){
+  df %>% 
+    group_by({{by}}) %>% 
+    mutate(...)
+}
+
+cl_appstore_games %>% 
+  num_in_groups(by=developer,
+                num_in_groups=num_in_groups((n(average_user_rating))))
+
+promote_rel_dept1<-function(df){
+  df %>% 
+  assert(in_set(c("department","years_since_last_promotion"))) %>% 
+  group_by(department) %>% 
+  mutate(avg_yr_prom_dept=mean(years_since_last_promotion), na.rm=TRUE) %>% 
+  select(avg_yr_prom_dept,department, everything()) %>% 
+  ungroup() %>% 
+  arrange(department) 
+}
+```
+
+
+engineer 4 = days since last update (today - current_version_release)

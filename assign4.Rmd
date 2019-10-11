@@ -1,8 +1,16 @@
 ---
 title: "assign4"
+author: "Linh Nguyen"
 output: html_notebook
 ---
 
+```{r message=FALSE}
+library(tidyverse)
+library(janitor)
+library(RVerbalExpressions)
+library(stringr)
+library(lubridate)
+```
 
 For the regular expression exercises, try writing first using regular expressions directly, then try using rverbalexpressions. Provide the code for both. 
 
@@ -11,24 +19,211 @@ For the regular expression exercises, try writing first using regular expression
 ## R4DS 16.4.5
 
 Create a vector of dates giving the first day of every month in the current year. 
+```{r}
+years(c(2019))+ months(c(1:12))+days(1)
+
+year_days<- function(current_year){
+  years(current_year)+months(c(1:12))+days(1)
+}
+
+
+year_days(2016)
+```
+
 
 Write a function that given your birthday (as a date), returns how old you are in years.
+```{r warning=FALSE}
+bday<- c(19971021, 19931023)
+
+bdayz<-function(bday){
+  case_when(
+  !is.na(ymd(bday)) ==TRUE ~ floor((today()-ymd(bday))/dyears(1)),
+  !is.na(ydm(bday)) ==TRUE ~ floor((today()-ydm(bday))/dyears(1)),
+  !is.na(mdy(bday)) ==TRUE ~ floor((today()-mdy(bday))/dyears(1)),
+  !is.na(myd(bday)) ==TRUE ~ floor((today()-myd(bday))/dyears(1)),
+  !is.na(dmy(bday)) ==TRUE ~ floor((today()-dmy(bday))/dyears(1)),
+  !is.na(dym(bday)) ==TRUE ~ floor((today()-dym(bday))/dyears(1))
+)
+}
+
+bdayz(bday)
+
+```
 
 Write a function that given your birthday, returns the day of the week you were born on. 
+
+```{r warning=FALSE}
+
+wbday<-function(bday){
+  case_when(
+  !is.na(ymd(bday)) ==TRUE ~ wday(ymd(bday),label=T),
+  !is.na(ydm(bday)) ==TRUE ~ wday(ydm(bday),label=T),
+  !is.na(mdy(bday)) ==TRUE ~ wday(mdy(bday),label=T),
+  !is.na(myd(bday)) ==TRUE ~ wday(myd(bday),label=T),
+  !is.na(dmy(bday)) ==TRUE ~ wday(dmy(bday),label=T),
+  !is.na(dym(bday)) ==TRUE ~ wday(dym(bday),label=T)
+)
+}
+wbday(08261995)
+
+```
+
+***
 
 ## R4DS 14.3.2.1
 
 Given the corpus of common words in stringr::words, create regular expressions that find all words that have seven letters or more. (Since this list is long, you might want to use the match argument to str_view() to show only the matching or non-matching words.)
+
+stingr
+```{r message= FALSE}
+random_words<-c("suffer","suggest","surface","system","talk","task","tax","technology","television")
+length(random_words)
+
+test_words<- stringr::words
+str_view(random_words, "[A-Z]{7}")
+
+```
+
+rverbal
+```{r}
+words7_rx<-rx() %>%
+  rx_start_of_line() %>% 
+  rx_alnum() %>% 
+  rx_repeat_previous(7) 
+
+
+str_view(random_words, pattern=words7_rx)
+```
+
 
 ## R4DS 14.3.3.1
 
 Use str_detect to find all words that:
 
 That only contain consonants. (Hint: thinking about matching “not”-vowels.)
+stringr
+```{r}
+random_words<-c("aaa","apples","suffer","suggest","surface","system","talk","task","tax","technology","television", "zzz","ggg")
+str_view(random_words,pattern = "^([^aeiou]+)$", match=TRUE)
+str_view(test_words,pattern= "^([^aeiou]+)$", match=TRUE)
+
+```
+
+rverbal
+```{r}
+random_words<-c("aaa","apples","suffer","suggest","surface","system","talk","task","tax","technology","television", "zzz","ggg")
+
+constz_only_rx<- rx() %>% 
+  rx_start_of_line() %>% 
+  rx_something_but(value= "aeiou") %>% 
+  rx_end_of_line() 
+
+
+# str_view(random_words,constz_only)
+str_view(random_words, pattern=constz_only_rx, match=T)
+str_view(test_words,pattern=constz_only_rx,match=T)
+
+view(test_words)
+```
+
 
 Empirically verify the rule “i before e except after c”.
 
+stringr
+```{r}
+random_words<- c("achieve","ceiling","movies","apple","cheeks","deceit")
+
+#i before e
+str_view(random_words,pattern = "(ie)", match = T)
+
+#except after c
+str_view(random_words,pattern= ("cei"),match=T)
+
+```
+
+rverbal
+```{r}
+ie_rx<- rx() %>% 
+  rx_find(value="ie")
+ie_rx
+str_view(test_words,pattern=ie_rx, match=T)
+
+ie_exceptc_rx<- rx() %>% 
+  rx_find("cei")
+ie_exceptc_rx
+str_view(test_words,pattern=ie_exceptc_rx, match=T)
+```
+
+
 Create a regular expression that will match telephone numbers as commonly written in the US. Split this up into multiple expressions as needed.
+
+stringr
+```{r}
+test_phone<- c("(395)836-7868","(685) 209-2585","873-464-6574","333.753.1041")
+
+#dashes and dots
+str_view(test_phone, pattern= "^[0-9]{3}[-\\.][0-9]{3}[-\\.][0-9]{4}$")
+
+#parenthesis
+str_view(test_phone,pattern="^[(][0-9]{3}[)]\\s*[0-9]{3}[-\\.][0-9]{4}$")
+
+```
+
+rverbal
+```{r}
+#dashes and dots
+tel_dashdot_rx<-rx() %>%
+  rx_start_of_line() %>% 
+  rx_digit() %>% 
+  rx_repeat_previous(3) %>% 
+  rx_any_of("-.") %>% 
+  rx_digit() %>% 
+  rx_repeat_previous(3) %>% 
+  rx_any_of("-.") %>% 
+  rx_digit() %>% 
+  rx_repeat_previous(4) %>% 
+  rx_end_of_line()
+  
+tel_dashdot_rx
+
+str_view(test_phone,pattern= tel_dashdot_rx, match=T)
+
+#parentheses only
+tel_para_rx<-rx() %>%
+  rx_start_of_line() %>% 
+  rx_find("(") %>% 
+  rx_digit() %>% 
+  rx_repeat_previous(3) %>% 
+  rx_any_of(")") %>% 
+  rx_digit() %>% 
+  rx_repeat_previous(3) %>% 
+  rx_find("-") %>% 
+  rx_digit() %>% 
+  rx_repeat_previous(4) %>% 
+  rx_end_of_line()
+
+#rverbal parenthese and white space
+tel_para_ws_rx<-rx() %>%
+  rx_start_of_line() %>% 
+  rx_find("(") %>% 
+  rx_digit() %>% 
+  rx_repeat_previous(3) %>% 
+  rx_any_of(")") %>% 
+  rx_whitespace() %>% 
+  rx_digit() %>% 
+  rx_repeat_previous(3) %>% 
+  rx_find("-") %>% 
+  rx_digit() %>% 
+  rx_repeat_previous(4) %>% 
+  rx_end_of_line()
+  
+tel_para_rx
+tel_para_ws_rx
+  
+str_view(test_phone,pattern= tel_para_ws_rx, match=T)
+```
+
+***
 
 # Part 2
 

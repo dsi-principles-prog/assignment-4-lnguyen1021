@@ -1,0 +1,70 @@
+---
+title: "30-feature-engineer"
+output: html_notebook
+---
+**4. Using best practices, write four functions which add engineered features to the dataset, including a description and rationale. Include a test to determine whether the features are working as intended. **
+
+being graded on the number of FUNCTIONS not the number of columns. so 1 function creating multiple features counts as 1 not the number of features
+
+engineer function 1: abrv_count
+will add a column to the df that will count the number of values in a list of characters
+```{r}
+num_abrv<- function(x,split=", "){
+  #takes a vector x and then strsplt on ", " and flattens into a list
+  a<-strsplit(x,split)
+  b<-lapply(a,length)
+  flatten_int(b)
+}
+
+abrv_count<- function(df, vars){
+  # takes a df and a list of variables that have a list of characters
+  df %>% 
+    assert(is.character(vars)) %>% 
+    mutate_at(vars, list(num_ab=num_abrv)) %>% 
+    select(contains("num_ab"), everything())
+}
+cl_appstore_games %>% 
+  abrv_count(c("languages"))
+
+```
+
+
+engineer function 2: interact_measure
+will add a column to the df that will be the product of 2 columns passed to it. this will help to assess the interaction between 2 listed variable 
+***does not fully work!***
+```{r}
+emm <-function(x,y){
+  #emm = effect measure modification (interaction between 2 vectors)
+  z<-x*y
+  return(z)
+}
+
+
+interact_measure<-function(df, vars) {
+  df %>% 
+  assert(is.double(vars)) %>% 
+  mutate_at(vars, list(interact=emm)) %>% 
+    select(contains("interact"), everything())
+}
+cl_appstore_games %>% 
+  interact_measure(c("user_rating_count","price"))
+
+
+```
+
+engineer function 3:num_in_groups
+creates a new column which will return the number of games by that developerer
+```{r}
+num_in_groups<- function(df, ..., by){
+  df %>% 
+    group_by({{by}}) %>% 
+    mutate_at(vars,list(n()))
+}
+
+cl_appstore_games %>% 
+  num_in_groups(by=developer,
+                num_in_groups=num_in_groups((n(average_user_rating))))
+```
+
+
+engineer function3:
