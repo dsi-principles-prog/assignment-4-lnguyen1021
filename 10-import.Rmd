@@ -29,6 +29,7 @@ library(assertr)
 library(lubridate)
 library(ggplot2)
 library(tidyr)
+library(lubridate)
 ```
 
 
@@ -92,6 +93,9 @@ cl_appstore_games <- appstore_games %>%
   select(-c(icon_url, subtitle, url, description)) %>%
   filter(!is.na(price), !is.na(average_user_rating))
 dim(cl_appstore_games)
+
+cl_appstore_games$original_release_date<- ymd(cl_appstore_games$original_release_date)
+cl_appstore_games$current_version_release_date<- ymd(cl_appstore_games$current_version_release_date)
 ```
 
 

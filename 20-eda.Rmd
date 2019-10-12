@@ -84,34 +84,3 @@ cl_appstore_games %>%
   ggplot(aes(numgames))+
   geom_histogram(bins =50)
 ```
-
-
-engineer 3 = count the number of games by developer
-
-
-add a column that will count the number groups in a column
-```{r}
-
-num_in_groups<- function(df, ..., by){
-  df %>% 
-    group_by({{by}}) %>% 
-    mutate(...)
-}
-
-cl_appstore_games %>% 
-  num_in_groups(by=developer,
-                num_in_groups=num_in_groups((n(average_user_rating))))
-
-promote_rel_dept1<-function(df){
-  df %>% 
-  assert(in_set(c("department","years_since_last_promotion"))) %>% 
-  group_by(department) %>% 
-  mutate(avg_yr_prom_dept=mean(years_since_last_promotion), na.rm=TRUE) %>% 
-  select(avg_yr_prom_dept,department, everything()) %>% 
-  ungroup() %>% 
-  arrange(department) 
-}
-```
-
-
-engineer 4 = days since last update (today - current_version_release)
