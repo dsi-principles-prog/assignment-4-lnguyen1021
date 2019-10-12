@@ -33,11 +33,13 @@ engineer function 2: interact_measure
 will add a column to the df that will be the product of 2 columns passed to it. this will help to assess the interaction between 2 listed variable 
 ***does not fully work!***
 ```{r}
-emm <-function(x,y){
+emm <-function(x){
   #emm = effect measure modification (interaction between 2 vectors)
-  x*y
+  
 }
 
+
+emm()
 
 interact_measure<-function(df, vars) {
   df %>% 
@@ -51,28 +53,26 @@ cl_appstore_games %>%
 
 ```
 
-engineer function 3:num_in_groups
+engineer function 3:count_by_dev
 creates a new column which will return the number of games by that developerer
-***does not fully work!***
 ```{r}
-cl_appstore_games %>% 
-  group_by(developer) %>% 
-  mutate(num=n()) %>% 
-  select(num,everything())
-
-n<-function(x){
-  n(x)
+count_n<- function(x){
+  length(x)
 }
 
-num_in_group<- function(df,vars,by){
+count_n(cl_appstore_games$price)
+
+count_by_dev<- function(df, vars){
   df %>% 
-    group_by({{by}}) %>% 
-    mutate_at(by,list(num=n))
+    group_by(developer) %>% 
+    mutate_at(vars, list(num=count_n)) %>% 
+    ungroup() %>% 
+    select(developer, contains("num"),everything()) %>% 
+    arrange(desc(num))
 }
 
 cl_appstore_games %>% 
-  num_in_group()
-
+  count_by_dev(c("average_user_rating"))
 
 ```
 
