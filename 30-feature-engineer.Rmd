@@ -29,51 +29,45 @@ cl_appstore_games %>%
 ```
 
 
-engineer function 2: interact_measure
-will add a column to the df that will be the product of 2 columns passed to it. this will help to assess the interaction between 2 listed variable 
-***does not fully work!***
+engineer function 2: interact_price_lang_num
+I am interested in looking at the interaction between price and the number of languages an app has. I created a function that will take the engineered feature num_ab and multiply it by the price
+
 ```{r}
-emm <-function(x){
-  #emm = effect measure modification (interaction between 2 vectors)
-  
-}
-
-
-emm()
-
-interact_measure<-function(df, vars) {
+interact_price_lang_num<-function(df) {
   df %>% 
-  assert(is.double(vars)) %>% 
-  mutate_at(vars, list(interact=emm)) %>% 
-    select(contains("interact"), everything())
+  assert(is.double,price) %>% 
+  assert(is.integer,num_ab) %>% 
+  mutate(interact_pln= price*num_ab)
 }
-cl_appstore_games %>% 
-  interact_measure(c("user_rating_count","price"))
 
+test<- cl_appstore_games %>% 
+  abrv_count(c("languages"))
+
+test %>% interact_price_lang_num()
 
 ```
 
-engineer function 3:count_by_dev
-creates a new column which will return the number of games by that developerer
+engineer function 3:count_by
+creates a new column which will return the number of games by the specified column
 ```{r}
 count_n<- function(x){
   length(x)
 }
 
-count_n(cl_appstore_games$price)
-
-count_by_dev<- function(df, vars){
+count_by<- function(df, vars,by){
   df %>% 
-    group_by(developer) %>% 
+    group_by({{by}}) %>% 
     mutate_at(vars, list(num=count_n)) %>% 
     ungroup() %>% 
-    select(developer, contains("num"),everything()) %>% 
+    select(contains("num"),{{by}},everything()) %>% 
     arrange(desc(num))
 }
 
 cl_appstore_games %>% 
-  count_by_dev(c("average_user_rating"))
+  count_by(c("average_user_rating"), by=developer)
 
+cl_appstore_games %>% 
+  count_by(c("average_user_rating"), by=age_rating)
 ```
 
 
